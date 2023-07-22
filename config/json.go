@@ -23,9 +23,9 @@ type LevelDbConfigs struct {
 
 func DefaultConfigs() *AppConfigs {
 	return &AppConfigs{
-		AppName: "elichika",
+		AppName: "niconi",
 		Settings: Settings{
-			CdnServer: "http://192.168.1.123/static",
+			CdnServer: "http://192.168.31.2/static",
 		},
 	}
 }

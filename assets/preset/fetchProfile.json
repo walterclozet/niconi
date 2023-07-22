@@ -3,18 +3,18 @@
         "basic_info": {
             "user_id": 594152164,
             "name": {
-                "dot_under_text": "梦路2号机@果果厨"
+                "dot_under_text": "花畑佳子"
             },
             "rank": 122,
             "last_played_at": 1684949629,
-            "recommend_card_master_id": 200013001,
+            "recommend_card_master_id": 300093003,
             "recommend_card_level": 92,
             "is_recommend_card_image_awaken": true,
             "is_recommend_card_all_training_activated": true,
-            "emblem_id": 13100608,
+            "emblem_id": 10400333,
             "is_new": false,
             "introduction_message": {
-                "dot_under_text": "B站主播：梦路_YumeMichi"
+                "dot_under_text": "我喜欢妮可还有大家"
             },
             "friend_approved_at": null,
             "request_status": 1,
@@ -23,7 +23,7 @@
         "total_love_point": 3731455,
         "love_members": [
             {
-                "member_master_id": 1,
+                "member_master_id": 9,
                 "love_point": 757233
             },
             {
@@ -951,13 +951,13 @@
             {
                 "member_master_id": 9,
                 "love_level": 77,
-                "love_point_limit": 415410,
+                "love_point_limit": 1376611,
                 "owned_card_count": 16,
                 "all_training_activated_card_count": 2
             },
             {
                 "member_master_id": 101,
-                "love_level": 46,
+                "love_level": 158,
                 "love_point_limit": 400560,
                 "owned_card_count": 13,
                 "all_training_activated_card_count": 3

@@ -4,15 +4,15 @@
             {
                 "user_id": 666666666,
                 "name": {
-                    "dot_under_text": "B站主播：梦路_YumeMichi"
+                    "dot_under_text": "主推妮可"
                 },
                 "rank": 1,
                 "last_login_at": 1685971269,
                 "card_by_category": [
                     1,
                     {
-                        "card_master_id": 300073003,
-                        "level": 80,
+                        "card_master_id": 200093003,
+                        "level": 92,
                         "grade": 5,
                         "love_level": 1,
                         "is_awakening": true,
@@ -230,7 +230,7 @@
                 "emblem_id": 1106001,
                 "is_friend": true,
                 "introduction_message": {
-                    "dot_under_text": "B站主播：梦路_YumeMichi"
+                    "dot_under_text": "Niconiconi~"
                 }
             }
         ],
