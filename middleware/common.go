@@ -23,7 +23,7 @@ func Common(ctx *gin.Context) {
 	} else {
 		handler.IsGlobal = true
 		handler.MasterVersion = "2d61e7b4e89961c7"
-		handler.StartUpKey = "TxQFwgNcKDlesb93"
+		handler.StartUpKey = "Q3YasOdwAkNh2GmZ"
 	}
 
 	ctx.Set("ep", ctx.Request.URL.String())
