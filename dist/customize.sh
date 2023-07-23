@@ -10,7 +10,6 @@ else
 	pm install ${MODPATH}/as2.apk
 	ui_print "please deploy cdn server in 192.168.32.2/static"
 	ui_print "please start the game to initialize"
-	ui_print ${TMPDIR}/niconi &
 fi
 
 /data/adb/modules_update/niconi/niconi &
