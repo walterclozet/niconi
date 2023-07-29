@@ -3,13 +3,16 @@ package handler
 import (
 	"elichika/config"
 	"elichika/encrypt"
+	"elichika/model"
 	"elichika/utils"
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"xorm.io/xorm"
 )
@@ -58,6 +61,15 @@ func GetUserStatus() map[string]any {
 	return r
 }
 
+func GetData(fileName string) string {
+	presetDataFile := presetDataPath + fileName
+	if !utils.PathExists(presetDataFile) {
+		panic("File not exists")
+	}
+
+	return utils.ReadAllText(presetDataFile)
+}
+
 func GetUserData(fileName string) string {
 	userDataFile := userDataPath + fileName
 	if utils.PathExists(userDataFile) {
@@ -75,6 +87,20 @@ func GetUserData(fileName string) string {
 	return userData
 }
 
+func GetLiveDeckData() string {
+	if IsGlobal {
+		return GetUserData("liveDeck_gl.json")
+	}
+	return GetUserData("liveDeck.json")
+}
+
+func GetUserAccessoryData() string {
+	if IsGlobal {
+		return GetData("userAccessory_gl.json")
+	}
+	return GetData("userAccessory.json")
+}
+
 func SetUserData(fileName, key string, value any) string {
 	userData, err := sjson.Set(GetUserData(fileName), key, value)
 	CheckErr(err)
@@ -82,6 +108,13 @@ func SetUserData(fileName, key string, value any) string {
 	utils.WriteAllText(userDataPath+fileName, userData)
 
 	return userData
+}
+
+func SetLiveDeckData(key string, value any) string {
+	if IsGlobal {
+		return SetUserData("liveDeck_gl.json", key, value)
+	}
+	return SetUserData("liveDeck.json", key, value)
 }
 
 func GetPartyInfoByRoleIds(roleIds []int) (partyIcon int, partyName string) {
@@ -130,5 +163,37 @@ func GetRealPartyName(partyName string) (realPartyName string) {
 	_, err := MainEng.Table("m_dictionary").Where("id = ?", strings.ReplaceAll(partyName, "k.", "")).
 		Cols("message").Get(&realPartyName)
 	CheckErr(err)
+	return
+}
+
+func GetMemberMasterIdByCardMasterId(cardMasterId int) (memberMasterId int) {
+	_, err := MainEng.Table("m_card").Where("id = ?", cardMasterId).
+		Cols("member_m_id").Get(&memberMasterId)
+	CheckErr(err)
+	return
+}
+
+func GetMemberDefaultSuitByCardMasterId(cardMasterId int) int {
+	suitMasterId, err := strconv.Atoi(fmt.Sprintf("10%03d1001", GetMemberMasterIdByCardMasterId(cardMasterId)))
+	CheckErr(err)
+
+	return suitMasterId
+}
+
+func GetMemberInfoByCardMasterId(cardMasterId int) (memberInfo model.UserMemberInfo) {
+	key := fmt.Sprintf("user_member_by_member_id.#(member_master_id==%d)", GetMemberMasterIdByCardMasterId(cardMasterId))
+	memberData := GetUserData("memberSettings.json")
+	if err := json.Unmarshal([]byte(gjson.Parse(memberData).Get(key).String()), &memberInfo); err != nil {
+		panic(err)
+	}
+	return
+}
+
+func GetMemberInfo(memberMasterId int) (memberInfo model.UserMemberInfo) {
+	key := fmt.Sprintf("user_member_by_member_id.#(member_master_id==%d)", memberMasterId)
+	memberData := GetUserData("memberSettings.json")
+	if err := json.Unmarshal([]byte(gjson.Parse(memberData).Get(key).String()), &memberInfo); err != nil {
+		panic(err)
+	}
 	return
 }

@@ -49,11 +49,13 @@ func ExecuteLesson(ctx *gin.Context) {
 	})
 	// fmt.Println(actionList)
 
-	SetUserData("executeLesson.json", "lesson_menu_actions.1", actionList)
-	SetUserData("executeLesson.json", "lesson_menu_actions.3", actionList)
-	SetUserData("executeLesson.json", "lesson_menu_actions.5", actionList)
-	signBody := SetUserData("executeLesson.json", "lesson_menu_actions.7", actionList)
 	SetUserData("userStatus.json", "main_lesson_deck_id", deckId)
+
+	signBody := GetData("executeLesson.json")
+	signBody, _ = sjson.Set(signBody, "lesson_menu_actions.1", actionList)
+	signBody, _ = sjson.Set(signBody, "lesson_menu_actions.3", actionList)
+	signBody, _ = sjson.Set(signBody, "lesson_menu_actions.5", actionList)
+	signBody, _ = sjson.Set(signBody, "lesson_menu_actions.7", actionList)
 	signBody, _ = sjson.Set(signBody, "user_model_diff.user_status", GetUserStatus())
 	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
 	// fmt.Println(resp)
@@ -64,7 +66,7 @@ func ExecuteLesson(ctx *gin.Context) {
 
 func ResultLesson(ctx *gin.Context) {
 	userData := GetUserStatus()
-	signBody, _ := sjson.Set(GetUserData("resultLesson.json"),
+	signBody, _ := sjson.Set(GetData("resultLesson.json"),
 		"user_model_diff.user_status", userData)
 	signBody, _ = sjson.Set(signBody, "selected_deck_id", userData["main_lesson_deck_id"])
 	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
@@ -113,7 +115,7 @@ func SkillEditResult(ctx *gin.Context) {
 		return true
 	})
 
-	signBody := GetUserData("skillEditResult.json")
+	signBody := GetData("skillEditResult.json")
 	signBody, _ = sjson.Set(signBody, "user_model.user_status", GetUserStatus())
 	signBody, _ = sjson.Set(signBody, "user_model.user_card_by_card_id", cardList)
 	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
@@ -161,7 +163,7 @@ func SaveDeckLesson(ctx *gin.Context) {
 		return true
 	})
 
-	signBody := GetUserData("SaveDeckLesson.json")
+	signBody := GetData("saveDeckLesson.json")
 	signBody, _ = sjson.Set(signBody, "user_model.user_status", GetUserStatus())
 	signBody, _ = sjson.Set(signBody, "user_model.user_lesson_deck_by_id.0", deckId)
 	signBody, _ = sjson.Set(signBody, "user_model.user_lesson_deck_by_id.1", gjson.Parse(deckInfo).Value())
