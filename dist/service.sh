@@ -1,4 +1,4 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
 cd $MODDIR
-$MODDIR/niconi
+$MODDIR/elichika

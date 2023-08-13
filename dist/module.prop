@@ -3,6 +3,6 @@ name=LLAS Global local server
 version=1.0.0
 versionCode=1
 author=Walter Clozet
-description=Local server for global Lovelive SIF All stars
+description=LLAS Local server(Elichika by YumeMichi) for magisk. Only global version is tested.
 updateJson=https://hkb2.oss-cn-hongkong.aliyuncs.com/niconi.json
 
