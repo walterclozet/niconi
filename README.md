@@ -63,5 +63,9 @@ File list:
 | sifas-jp-cdn-assets-b66ec2295e9a00aa.tar | assets (Japanese) |
 | sifas-gl-cdn-assets-2d61e7b4e89961c7.tar | assets (Global)   |
 
+### patched database
+for japanese version, you need to download [patched database](https://mega.nz/folder/gwJizZjS#v_fSOadf9yrb_eaOze2r7Q)
+for gl version, it is already included in static folder.
+
 ### Clients
-Use [3.12.0 clients](https://selenachina-my.sharepoint.com/:u:/p/walter/ER6SWMf1vKBMsm39VVXq9AABH4SCwxx7pnB4aWJanR116A?e=snCBhP 作者：walterclozet https://www.bilibili.com/read/cv25706340/?spm_id_from=333.788.0.0 出处：bilibili). For fast install you need to download [llas.zip](https://selenachina-my.sharepoint.com/:u:/p/walter/EUkzHP6PAMNEjRzCjBZCiEYBC2tI5NxwnrrCyAEGUhFI4g?e=E0L15K).
+Use [3.12.0 clients](https://selenachina-my.sharepoint.com/:u:/p/walter/ER6SWMf1vKBMsm39VVXq9AABH4SCwxx7pnB4aWJanR116A?e=snCBhP). For fast install you need to download [llas.zip](https://selenachina-my.sharepoint.com/:u:/p/walter/EUkzHP6PAMNEjRzCjBZCiEYBC2tI5NxwnrrCyAEGUhFI4g?e=E0L15K).
