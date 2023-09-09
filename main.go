@@ -2,6 +2,7 @@ package main
 
 import (
 	"elichika/router"
+	"elichika/config"
 
 	"elichika/cli/db"
 	"fmt"
@@ -47,6 +48,13 @@ func main() {
 
 	if len(os.Args) > 1 {
 		cli()
+	} else {
+               _, err := os.Stat(config.ServerdataDb)
+               if os.IsNotExist(err) {
+                       db.Init([]string{})
+                       db.Gacha([]string{"init"})
+                       db.Gacha([]string{"insert", "gacha_insert.json"})
+        	}
 	}
 
 	gin.SetMode(gin.ReleaseMode)
