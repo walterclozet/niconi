@@ -6,8 +6,10 @@ rm -r dist/data/
 rm dist/elichika
 cp -rp assets dist/
 cp -rp static dist/
-rm -r dist/assets/db/jp/*.db
-rm -r dist/assets/db/gl/*.db
+rm -r dist/assets/db/jp/a*.db
+rm -r dist/assets/db/jp/d*.db
+rm -r dist/assets/db/gl/a*.db
+rm -r dist/assets/db/gl/d*.db
 cp *.pem dist/
 mkdir -p dist/data/allstars.db/
 rm dist/static/2d61e7b4e89961c7/*en*

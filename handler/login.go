@@ -93,7 +93,8 @@ func Login(ctx *gin.Context) {
 	newKey = utils.Xor(newKey, jaKey)
 	newKey64 := base64.StdEncoding.EncodeToString(newKey)
 	// fmt.Println("Session Key:", newKey64)
-	UserID := ctx.GetInt("user_id")
+	UserID := ctx.GetInt("user_id")	
+	VerifyAccount(UserID)
 	session := serverdb.GetSession(ctx, UserID)
 	session.UserStatus.LastLoginAt = time.Now().Unix()
 

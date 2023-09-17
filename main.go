@@ -3,6 +3,7 @@ package main
 import (
 	"elichika/router"
 	"elichika/config"
+	"elichika/handler"
 
 	"elichika/cli/db"
 	"fmt"
@@ -22,7 +23,7 @@ func make(args []string) {
 	}
 
 	db.Init([]string{"overwrite"})
-	db.Account(args)
+	handler.Account(args)
 	db.Gacha([]string{"init"})
 	db.Gacha([]string{"insert", "gacha_insert.json"})
 }
@@ -32,7 +33,7 @@ func cli() {
 	case "init":
 		db.Init(os.Args[2:])
 	case "account":
-		db.Account(os.Args[2:])
+		handler.Account(os.Args[2:])
 	case "gacha":
 		db.Gacha(os.Args[2:])
 	case "make": // easy import
@@ -54,6 +55,7 @@ func main() {
                        db.Init([]string{})
                        db.Gacha([]string{"init"})
                        db.Gacha([]string{"insert", "gacha_insert.json"})
+                       handler.CreateNewUser()
         	}
 	}
 

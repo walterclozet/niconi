@@ -26,6 +26,7 @@ func FetchBootstrap(ctx *gin.Context) {
 	}
 
 	UserID := ctx.GetInt("user_id")
+	VerifyAccount(UserID)
 	session := serverdb.GetSession(ctx, UserID)
 	session.UserStatus.BootstrapSifidCheckAt = time.Now().UnixMilli()
 	session.UserStatus.DeviceToken = req.DeviceToken
