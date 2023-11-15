@@ -3,7 +3,7 @@ package handler
 import (
 	"elichika/config"
 	"elichika/model"
-	"elichika/serverdb"
+	"elichika/userdata"
 	"elichika/utils"
 
 	"encoding/json"
@@ -18,7 +18,8 @@ func UpdateCardNewFlag(ctx *gin.Context) {
 	// mark the cards as read (is_new = false)
 	reqBody := gjson.Parse(ctx.GetString("reqBody")).Array()[0].String()
 	userID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, userID)
+	session := userdata.GetSession(ctx, userID)
+	defer session.Close()
 	type UpdateCardNewFlagReq struct {
 		CardMasterIDs []int `json:"card_master_ids"`
 	}
@@ -32,7 +33,7 @@ func UpdateCardNewFlag(ctx *gin.Context) {
 	}
 
 	signBody := session.Finalize(GetData("userModelDiff.json"), "user_model_diff")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
 }
@@ -47,13 +48,14 @@ func ChangeIsAwakeningImage(ctx *gin.Context) {
 	}
 
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	userCard := session.GetUserCard(req.CardMasterID)
 	userCard.IsAwakeningImage = req.IsAwakeningImage
 	session.UpdateUserCard(userCard)
 
 	cardResp := session.Finalize(GetData("changeIsAwakeningImage.json"), "user_model_diff")
-	resp := SignResp(ctx.GetString("ep"), cardResp, config.SessionKey)
+	resp := SignResp(ctx, cardResp, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -69,13 +71,14 @@ func ChangeFavorite(ctx *gin.Context) {
 	}
 
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	userCard := session.GetUserCard(req.CardMasterID)
 	userCard.IsFavorite = req.IsFavorite
 	session.UpdateUserCard(userCard)
 
 	cardResp := session.Finalize(GetData("changeFavorite.json"), "user_model_diff")
-	resp := SignResp(ctx.GetString("ep"), cardResp, config.SessionKey)
+	resp := SignResp(ctx, cardResp, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -94,9 +97,9 @@ func GetOtherUserCard(ctx *gin.Context) {
 		panic(err)
 	}
 
-	partnerCard := serverdb.GetPartnerCardFromUserCard(serverdb.GetOtherUserCard(req.UserID, req.CardMasterID))
+	partnerCard := userdata.GetPartnerCardFromUserCard(userdata.GetOtherUserCard(req.UserID, req.CardMasterID))
 	userCardResp, _ := sjson.Set("{}", "other_user_card", partnerCard)
-	resp := SignResp(ctx.GetString("ep"), userCardResp, config.SessionKey)
+	resp := SignResp(ctx, userCardResp, config.SessionKey)
 	// fmt.Println(resp)
 
 	ctx.Header("Content-Type", "application/json")

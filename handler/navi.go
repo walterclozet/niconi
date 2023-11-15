@@ -2,22 +2,21 @@ package handler
 
 import (
 	"elichika/config"
-	"elichika/serverdb"
+	"elichika/userdata"
 
 	"encoding/json"
 	"net/http"
-	// "fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
-	// "github.com/tidwall/sjson"
 )
 
 func SaveUserNaviVoice(ctx *gin.Context) {
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	signBody := session.Finalize(GetData("saveUserNaviVoice.json"), "user_model")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -34,10 +33,11 @@ func TapLovePoint(ctx *gin.Context) {
 		panic(err)
 	}
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
-	session.AddLovePoint(req.MemberMasterID, 20)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
+	session.AddLovePoint(req.MemberMasterID, config.Conf.TapBondGain)
 	signBody := session.Finalize(GetData("saveUserNaviVoice.json"), "user_model")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
 }

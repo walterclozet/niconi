@@ -6,7 +6,7 @@ import (
 	"elichika/handler"
 	"elichika/klab"
 	"elichika/model"
-	"elichika/serverdb"
+	"elichika/userdata"
 	"elichika/utils"
 
 	"encoding/json"
@@ -48,7 +48,8 @@ func LiveSkip(ctx *gin.Context) {
 	utils.CheckErr(err)
 
 	userID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, userID)
+	session := userdata.GetSession(ctx, userID)
+	defer session.Close()
 	session.UserStatus.LastLiveDifficultyID = req.LiveDifficultyMasterID
 	db := ctx.MustGet("masterdata.db").(*xorm.Engine)
 	info := LiveFinishLiveDifficultyInfo{}
@@ -123,7 +124,7 @@ func LiveSkip(ctx *gin.Context) {
 	signBody := session.Finalize(handler.GetData("userModelDiff.json"), "user_model_diff")
 	signBody, _ = sjson.Set(signBody, "skip_live_result", skipLiveResult)
 
-	resp := handler.SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := handler.SignResp(ctx, signBody, config.SessionKey)
 	// fmt.Println(resp)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)

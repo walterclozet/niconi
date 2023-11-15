@@ -4,27 +4,26 @@ import (
 	"elichika/config"
 	"elichika/gacha"
 	"elichika/model"
-	"elichika/serverdb"
+	"elichika/userdata"
 	"elichika/utils"
 
 	"encoding/json"
-	// "fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	// "xorm.io/xorm"
 )
 
 func FetchGachaMenu(ctx *gin.Context) {
 	userID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, userID)
+	session := userdata.GetSession(ctx, userID)
+	defer session.Close()
 	gachaList := session.GetGachaList()
 	signBody := session.Finalize(GetData("userModelDiff.json"), "user_model_diff")
 	signBody, _ = sjson.Set(signBody, "gacha_list", gachaList)
 	signBody, _ = sjson.Set(signBody, "gacha_unconfirmed", nil)
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 	// fmt.Println(resp)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -36,8 +35,9 @@ func GachaDraw(ctx *gin.Context) {
 	err := json.Unmarshal([]byte(reqBody), &req)
 	utils.CheckErr(err)
 	userID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, userID)
-	ctx.Set("session", &session)
+	session := userdata.GetSession(ctx, userID)
+	defer session.Close()
+	ctx.Set("session", session)
 	gacha, resultCards := gacha.HandleGacha(ctx, req)
 
 	signBody := session.Finalize(GetData("userModelDiff.json"), "user_model_diff")
@@ -47,7 +47,7 @@ func GachaDraw(ctx *gin.Context) {
 	signBody, _ = sjson.Set(signBody, "retry_gacha", nil)
 	signBody, _ = sjson.Set(signBody, "stepup_next_step", nil)
 
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 	// fmt.Println(resp)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)

@@ -9,24 +9,16 @@ import (
 )
 
 type AppConfigs struct {
-	AppName  string   `json:"app_name"`
-	Settings Settings `json:"settings"`
-}
-
-type Settings struct {
-	CdnServer string `json:"cdn_server"`
-}
-
-type LevelDbConfigs struct {
-	DataPath string `json:"data_path"`
+	CdnServer  string   `json:"cdn_server"`
+	ServerAddress string `json:"server_address"`
+	TapBondGain int `json:"tap_bond_gain"`
 }
 
 func DefaultConfigs() *AppConfigs {
 	return &AppConfigs{
-		AppName: "niconi",
-		Settings: Settings{
-			CdnServer: "http://192.168.31.2/static",
-		},
+		CdnServer: "http://192.168.31.2/static",
+		ServerAddress: "0.0.0.0:80",
+		TapBondGain: 20,
 	}
 }
 

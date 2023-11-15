@@ -4,11 +4,10 @@ import (
 	"elichika/config"
 	"elichika/klab"
 	"elichika/model"
-	"elichika/serverdb"
+	"elichika/userdata"
 	"elichika/utils"
 
 	"encoding/json"
-	// "fmt"
 	"net/http"
 	"time"
 
@@ -28,17 +27,19 @@ func FetchTrainingTree(ctx *gin.Context) {
 		panic(err)
 	}
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	signBody := `"{}"`
 	signBody, _ = sjson.Set(signBody, "user_card_training_tree_cell_list", session.GetTrainingTree(req.CardMasterID))
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
 }
 
 func LevelUpCard(ctx *gin.Context) {
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 
 	reqBody := gjson.Parse(ctx.GetString("reqBody")).Array()[0].String()
 
@@ -56,7 +57,7 @@ func LevelUpCard(ctx *gin.Context) {
 	userCard.Level += req.AdditionalLevel
 	session.UpdateUserCard(userCard)
 	signBody := session.Finalize(GetData("userModelDiff.json"), "user_model_diff")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -76,10 +77,11 @@ func GradeUpCard(ctx *gin.Context) {
 	}
 
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 
 	userCard := session.GetUserCard(req.CardMasterID)
-	memberInfo := session.GetMember(GetMemberMasterIdByCardMasterId(req.CardMasterID))
+	memberInfo := session.GetMember(klab.MemberMasterIDFromCardMasterID(req.CardMasterID))
 	userCard.Grade += 1
 	currentBondLevel := klab.BondLevelFromBondValue(memberInfo.LovePointLimit)
 	currentBondLevel += klab.CardRarityFromCardMasterID(req.CardMasterID) / 10
@@ -101,7 +103,7 @@ func GradeUpCard(ctx *gin.Context) {
 		AfterLoveLevelLimit:  currentBondLevel})
 
 	resp := session.Finalize(GetData("userModelDiff.json"), "user_model_diff")
-	resp = SignResp(ctx.GetString("ep"), resp, config.SessionKey)
+	resp = SignResp(ctx, resp, config.SessionKey)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
 	// fmt.Println(resp)
@@ -120,7 +122,8 @@ func ActivateTrainingTreeCell(ctx *gin.Context) {
 	}
 
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 
 	db := ctx.MustGet("masterdata.db").(*xorm.Engine)
 
@@ -210,13 +213,13 @@ func ActivateTrainingTreeCell(ctx *gin.Context) {
 	card.TrainingDexterity += increasedStats[4]
 
 	// progression reward
-	progressionRewards := []model.RewardByContent{}
+	progressionRewards := []model.Content{}
 	err = db.Table("m_training_tree_progress_reward").Where("card_master_id = ? AND activate_num > ? and activate_num <= ?",
 		card.CardMasterID, card.TrainingActivatedCellCount, card.TrainingActivatedCellCount+len(req.CellMasterIDs)).
 		Find(&progressionRewards)
 	utils.CheckErr(err)
 	for _, reward := range progressionRewards {
-		session.AddRewardContent(reward)
+		session.AddResource(reward)
 	}
 
 	card.TrainingActivatedCellCount += len(req.CellMasterIDs)
@@ -244,9 +247,9 @@ func ActivateTrainingTreeCell(ctx *gin.Context) {
 
 	session.InsertTrainingCells(&unlockedCells)
 
-	jsonResp := session.Finalize(GetUserData("userModelDiff.json"), "user_model_diff")
+	jsonResp := session.Finalize(GetData("userModelDiff.json"), "user_model_diff")
 	jsonResp, _ = sjson.Set(jsonResp, "user_card_training_tree_cell_list", session.GetTrainingTree(req.CardMasterID))
-	resp := SignResp(ctx.GetString("ep"), jsonResp, config.SessionKey)
+	resp := SignResp(ctx, jsonResp, config.SessionKey)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
 }

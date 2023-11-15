@@ -3,7 +3,7 @@ package handler
 import (
 	"elichika/config"
 	"elichika/model"
-	"elichika/serverdb"
+	"elichika/userdata"
 
 	"encoding/json"
 	"net/http"
@@ -15,7 +15,8 @@ import (
 func TriggerReadCardGradeUp(ctx *gin.Context) {
 	reqBody := gjson.Parse(ctx.GetString("reqBody")).Array()[0].String()
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	req := model.TriggerReadReq{}
 	if err := json.Unmarshal([]byte(reqBody), &req); err != nil {
 		panic(err)
@@ -23,7 +24,7 @@ func TriggerReadCardGradeUp(ctx *gin.Context) {
 
 	session.AddTriggerCardGradeUp(req.TriggerID, nil)
 	resp := session.Finalize(GetData("userModel.json"), "user_model")
-	resp = SignResp(ctx.GetString("ep"), resp, config.SessionKey)
+	resp = SignResp(ctx, resp, config.SessionKey)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
 	// fmt.Println(resp)
@@ -32,7 +33,8 @@ func TriggerReadCardGradeUp(ctx *gin.Context) {
 func TriggerRead(ctx *gin.Context) {
 	reqBody := gjson.Parse(ctx.GetString("reqBody")).Array()[0].String()
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	req := model.TriggerReadReq{}
 	if err := json.Unmarshal([]byte(reqBody), &req); err != nil {
 		panic(err)
@@ -40,7 +42,7 @@ func TriggerRead(ctx *gin.Context) {
 
 	session.AddTriggerBasic(req.TriggerID, nil)
 	resp := session.Finalize(GetData("userModel.json"), "user_model")
-	resp = SignResp(ctx.GetString("ep"), resp, config.SessionKey)
+	resp = SignResp(ctx, resp, config.SessionKey)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
 	// fmt.Println(resp)
@@ -49,7 +51,8 @@ func TriggerRead(ctx *gin.Context) {
 func TriggerReadMemberLoveLevelUp(ctx *gin.Context) {
 	// req is null, so we need to pull the triggers from db here
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 
 	triggers := session.GetAllTriggerMemberLoveLevelUps()
 	for _, trigger := range triggers.Objects {
@@ -57,7 +60,7 @@ func TriggerReadMemberLoveLevelUp(ctx *gin.Context) {
 	}
 
 	resp := session.Finalize(GetData("userModel.json"), "user_model")
-	resp = SignResp(ctx.GetString("ep"), resp, config.SessionKey)
+	resp = SignResp(ctx, resp, config.SessionKey)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
 	// fmt.Println(resp)

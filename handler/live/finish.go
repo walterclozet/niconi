@@ -7,7 +7,7 @@ import (
 	"elichika/handler"
 	"elichika/klab"
 	"elichika/model"
-	"elichika/serverdb"
+	"elichika/userdata"
 	"elichika/utils"
 
 	"encoding/json"
@@ -125,7 +125,7 @@ type LiveFinishLiveDifficultyInfo struct {
 type LiveDifficultyMission struct {
 	Position    int
 	TargetValue int
-	Reward      model.RewardByContent `xorm:"extends"`
+	Reward      model.Content `xorm:"extends"`
 }
 
 func LiveFinish(ctx *gin.Context) {
@@ -134,10 +134,11 @@ func LiveFinish(ctx *gin.Context) {
 	req := LiveFinishReq{}
 	err := json.Unmarshal([]byte(reqBody), &req)
 	utils.CheckErr(err)
-	exists, liveState := serverdb.LoadLiveState(UserID)
+	exists, liveState := userdata.LoadLiveState(UserID)
 	utils.MustExist(exists)
 
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	liveState.DeckID = session.UserStatus.LatestLiveDeckID
 	liveState.LiveStage.LiveDifficultyID = session.UserStatus.LastLiveDifficultyID
 
@@ -207,7 +208,7 @@ func LiveFinish(ctx *gin.Context) {
 			if (i == 0) || (req.LiveScore.CurrentScore >= missions[i].TargetValue) {
 				(*liveResult.LiveResultAchievements.Objects[i]).IsCurrentlyAchieved = true
 				if !(*liveResult.LiveResultAchievements.Objects[i]).IsAlreadyAchieved { // new, add reward
-					session.AddRewardContent(missions[i].Reward)
+					session.AddResource(missions[i].Reward)
 					switch i {
 					case 0:
 						liveRecord.ClearedDifficultyAchievement1 = new(int)
@@ -280,10 +281,10 @@ func LiveFinish(ctx *gin.Context) {
 	}
 	session.UpdateLiveDifficultyRecord(liveRecord)
 	session.SetLastPlayLiveDifficultyDeck(lastPlayDeck)
-	liveFinishResp := session.Finalize(handler.GetUserData("userModelDiff.json"), "user_model_diff")
+	liveFinishResp := session.Finalize(handler.GetData("userModelDiff.json"), "user_model_diff")
 	liveFinishResp, _ = sjson.Set(liveFinishResp, "live_result", liveResult)
 
-	resp := handler.SignResp(ctx.GetString("ep"), liveFinishResp, config.SessionKey)
+	resp := handler.SignResp(ctx, liveFinishResp, config.SessionKey)
 	// fmt.Println(resp)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)

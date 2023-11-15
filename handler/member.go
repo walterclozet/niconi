@@ -5,7 +5,7 @@ import (
 	"elichika/enum"
 	"elichika/klab"
 	"elichika/model"
-	"elichika/serverdb"
+	"elichika/userdata"
 	"elichika/utils"
 
 	"encoding/json"
@@ -13,7 +13,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
-	// "github.com/tidwall/sjson"
 )
 
 func OpenMemberLovePanel(ctx *gin.Context) {
@@ -27,7 +26,8 @@ func OpenMemberLovePanel(ctx *gin.Context) {
 	err := json.Unmarshal([]byte(reqBody), &req)
 	utils.CheckErr(err)
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	panel := session.GetMemberLovePanel(req.MemberID)
 
 	panel.LovePanelLastLevelCellIDs = append(panel.LovePanelLastLevelCellIDs, req.MemberLovePanelCellIDs...)
@@ -50,7 +50,7 @@ func OpenMemberLovePanel(ctx *gin.Context) {
 	session.UpdateMemberLovePanel(panel)
 
 	signBody := session.Finalize(GetData("userModel.json"), "user_model")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 	// fmt.Println(resp)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)

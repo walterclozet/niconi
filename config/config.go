@@ -7,7 +7,6 @@ import (
 	"os"
 
 	_ "modernc.org/sqlite"
-	"xorm.io/xorm"
 )
 
 var (
@@ -19,22 +18,23 @@ var (
 
 	SessionKey = "12345678123456781234567812345678"
 
-	MainDb         = "assets/main.db"
 	GlDatabasePath = "assets/db/gl/"
 	JpDatabasePath = "assets/db/jp/"
-	ServerdataDb   = "assets/db/serverdata.db"
+
+	ServerdataDbPath = "assets/db/serverdata.db"
+	UserdataDbPath   = "assets/db/userdata.db"
+
+	PresetDataPath = "assets/preset/"
+	UserDataPath   = "assets/userdata/"
 
 	MasterVersionGl = "2d61e7b4e89961c7" // read from GL database, so user can update db just by changing that
 	MasterVersionJp = "b66ec2295e9a00aa" // ditto
 
-	MainEng         *xorm.Engine
-	MasterdataEngGl *xorm.Engine
-	MasterdataEngJp *xorm.Engine
+	GlStartUpKey = "TxQFwgNcKDlesb93"
+	JpStartUpKey = "5f7IZY1QrAX0D49g"
 
-	Conf = &AppConfigs{}
-
-	PresetDataPath = "assets/preset/"
-	UserDataPath   = "assets/userdata/"
+	ServerInitJsons = "server init jsons/"
+	Conf            = &AppConfigs{}
 )
 
 func readMasterdataManinest(path string) string {
@@ -54,33 +54,9 @@ func readMasterdataManinest(path string) string {
 func init() {
 	Conf = Load("./config.json")
 
-	eng, err := xorm.NewEngine("sqlite", MainDb)
-	if err != nil {
-		panic(err)
-	}
-	err = eng.Ping()
-	if err != nil {
-		panic(err)
-	}
-	MainEng = eng
-	MainEng.SetMaxOpenConns(50)
-	MainEng.SetMaxIdleConns(10)
-
-	MasterdataEngGl, err = xorm.NewEngine("sqlite", GlDatabasePath+"masterdata.db")
-	if err != nil {
-		panic(err)
-	}
-	MasterdataEngGl.SetMaxOpenConns(50)
-	MasterdataEngGl.SetMaxIdleConns(10)
 	MasterVersionGl = readMasterdataManinest(GlDatabasePath + "masterdata_a_en")
-
-	MasterdataEngJp, err = xorm.NewEngine("sqlite", JpDatabasePath+"masterdata.db")
-	if err != nil {
-		panic(err)
-	}
-	MasterdataEngJp.SetMaxOpenConns(50)
-	MasterdataEngJp.SetMaxIdleConns(10)
 	MasterVersionJp = readMasterdataManinest(JpDatabasePath + "masterdata_a_ja")
+
 	fmt.Println("gl master version:", MasterVersionGl)
 	fmt.Println("jp master version:", MasterVersionJp)
 }

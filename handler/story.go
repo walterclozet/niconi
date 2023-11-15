@@ -2,7 +2,7 @@ package handler
 
 import (
 	"elichika/config"
-	"elichika/serverdb"
+	"elichika/userdata"
 
 	"net/http"
 
@@ -11,9 +11,10 @@ import (
 
 func FinishStory(ctx *gin.Context) {
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	signBody := session.Finalize(GetData("finishStory.json"), "user_model")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -21,9 +22,10 @@ func FinishStory(ctx *gin.Context) {
 
 func FinishStoryMain(ctx *gin.Context) {
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	signBody := session.Finalize(GetData("finishUserStoryMain.json"), "user_model_diff")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -31,9 +33,10 @@ func FinishStoryMain(ctx *gin.Context) {
 
 func FinishStoryLinkage(ctx *gin.Context) {
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	signBody := session.Finalize(GetData("finishStoryLinkage.json"), "user_model_diff")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)

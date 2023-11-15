@@ -47,7 +47,7 @@ type GachaDraw struct { // s_gacha_draw
 	Guarantees      []int `xorm:"'guarantees'" json:"-"`                // ids to gacha.GachaGuarantee
 }
 
-type GachaDrawStepupDetail struct { // s_user_gacha_draw_stepup
+type GachaDrawStepupDetail struct { // u_gacha_draw_stepup
 	UserID        int  `json:"-"`
 	GachaMasterID int  `json:"-"`
 	CurrentStep   int  `json:"current_step"`
@@ -101,15 +101,15 @@ type GachaDrawReq struct {
 }
 
 type ResultCard struct {
-	GachaLotType         int              `json:"gacha_lot_type"` // 1 for normal, 2 for guaranteed
-	CardMasterID         int              `json:"card_master_id"`
-	Level                int              `json:"level"`                   // always 1
-	BeforeGrade          int              `json:"before_grade"`            // 0 for new
-	AfterGrade           int              `json:"after_grade"`             // 0 for new, 5 for maxed
-	Content              *RewardByContent `json:"content"`                 // if maxed then award radiance. Technically we can award anything, but this is only the display value
-	LimitExceeded        bool             `json:"limit_exceeded"`          // always false
-	BeforeLoveLevelLimit int              `json:"before_love_level_limit"` // always correct
-	AfterLoveLevelLimit  int              `json:"after_love_level_limit"`  // 0 for max level
+	GachaLotType         int      `json:"gacha_lot_type"` // 1 for normal, 2 for guaranteed
+	CardMasterID         int      `json:"card_master_id"`
+	Level                int      `json:"level"`                   // always 1
+	BeforeGrade          int      `json:"before_grade"`            // 0 for new
+	AfterGrade           int      `json:"after_grade"`             // 0 for new, 5 for maxed
+	Content              *Content `json:"content"`                 // if maxed then award radiance. Technically we can award anything, but this is only the display value
+	LimitExceeded        bool     `json:"limit_exceeded"`          // always false
+	BeforeLoveLevelLimit int      `json:"before_love_level_limit"` // always correct
+	AfterLoveLevelLimit  int      `json:"after_love_level_limit"`  // 0 for max level
 }
 
 // How this server implement (back end) gacha (for now):

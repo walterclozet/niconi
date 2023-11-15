@@ -4,7 +4,7 @@ import (
 	"elichika/config"
 	"elichika/handler"
 	"elichika/model"
-	"elichika/serverdb"
+	"elichika/userdata"
 	"elichika/utils"
 
 	"encoding/json"
@@ -15,7 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	// "xorm.io/xorm"
+	"xorm.io/xorm"
 )
 
 func FetchLiveMusicSelect(ctx *gin.Context) {
@@ -26,9 +26,9 @@ func FetchLiveMusicSelect(ctx *gin.Context) {
 	if weekday == 0 {
 		weekday = 7
 	}
-
+	db := ctx.MustGet("masterdata.db").(*xorm.Engine)
 	liveDailyList := []model.LiveDaily{}
-	err := handler.MainEng.Table("m_live_daily").Where("weekday = ?", weekday).Cols("id,live_id").Find(&liveDailyList)
+	err := db.Table("m_live_daily").Where("weekday = ?", weekday).Cols("id,live_id").Find(&liveDailyList)
 	utils.CheckErr(err)
 	for k := range liveDailyList {
 		liveDailyList[k].EndAt = int(tomorrow)
@@ -41,9 +41,10 @@ func FetchLiveMusicSelect(ctx *gin.Context) {
 	signBody, _ = sjson.Set(signBody, "weekday_state.next_weekday_at", tomorrow)
 	signBody, _ = sjson.Set(signBody, "live_daily_list", liveDailyList)
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	signBody = session.Finalize(signBody, "user_model_diff")
-	resp := handler.SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := handler.SignResp(ctx, signBody, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -61,15 +62,15 @@ func FetchLivePartners(ctx *gin.Context) {
 	for _, partnerID := range partnerIDs {
 		partner := model.LiveStartLivePartner{}
 		partner.IsFriend = true
-		serverdb.FetchDBProfile(partnerID, &partner)
-		partnerCards := serverdb.FetchPartnerCards(partnerID) // model.UserCard
+		userdata.FetchDBProfile(partnerID, &partner)
+		partnerCards := userdata.FetchPartnerCards(partnerID) // model.UserCard
 		if len(partnerCards) == 0 {
 			continue
 		}
 		for _, card := range partnerCards {
 			for i := 1; i <= 7; i++ {
 				if (card.LivePartnerCategories & (1 << i)) != 0 {
-					partnerCardInfo := serverdb.GetPartnerCardFromUserCard(card)
+					partnerCardInfo := userdata.GetPartnerCardFromUserCard(card)
 					partner.CardByCategory = append(partner.CardByCategory, i)
 					partner.CardByCategory = append(partner.CardByCategory, partnerCardInfo)
 				}
@@ -81,7 +82,7 @@ func FetchLivePartners(ctx *gin.Context) {
 	signBody := "{}"
 	signBody, _ = sjson.Set(signBody, "partner_select_state.live_partners", livePartners)
 	signBody, _ = sjson.Set(signBody, "partner_select_state.friend_count", len(livePartners))
-	resp := handler.SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := handler.SignResp(ctx, signBody, config.SessionKey)
 	// fmt.Println(resp)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -94,7 +95,8 @@ func LiveStart(ctx *gin.Context) {
 		panic(err)
 	}
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 
 	session.UserStatus.LastLiveDifficultyID = req.LiveDifficultyID
 	session.UserStatus.LatestLiveDeckID = req.DeckID
@@ -126,8 +128,8 @@ func LiveStart(ctx *gin.Context) {
 	}
 
 	if req.PartnerUserID != 0 {
-		liveState.LivePartnerCard = serverdb.GetPartnerCardFromUserCard(
-			serverdb.GetOtherUserCard(req.PartnerUserID, req.PartnerCardMasterID))
+		liveState.LivePartnerCard = userdata.GetPartnerCardFromUserCard(
+			userdata.GetOtherUserCard(req.PartnerUserID, req.PartnerCardMasterID))
 	}
 
 	liveStartResp := session.Finalize(handler.GetData("userModelDiff.json"), "user_model_diff")
@@ -135,8 +137,8 @@ func LiveStart(ctx *gin.Context) {
 	if req.PartnerUserID == 0 {
 		liveStartResp, _ = sjson.Set(liveStartResp, "live.live_partner_card", nil)
 	}
-	serverdb.SaveLiveState(liveState)
-	resp := handler.SignResp(ctx.GetString("ep"), liveStartResp, config.SessionKey)
+	userdata.SaveLiveState(liveState)
+	resp := handler.SignResp(ctx, liveStartResp, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)

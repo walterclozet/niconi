@@ -2,7 +2,7 @@ package handler
 
 import (
 	"elichika/config"
-	"elichika/serverdb"
+	"elichika/userdata"
 	"elichika/utils"
 
 	"encoding/json"
@@ -24,7 +24,8 @@ func FetchProfile(ctx *gin.Context) {
 	}
 
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	profile := session.FetchProfile(req.UserID)
 
 	signBody, err := json.Marshal(profile)
@@ -32,18 +33,17 @@ func FetchProfile(ctx *gin.Context) {
 		panic(err)
 	}
 
-	resp := SignResp(ctx.GetString("ep"), string(signBody), config.SessionKey)
+	resp := SignResp(ctx, string(signBody), config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
-	// fmt.Println(resp)
 }
 
 func SetProfile(ctx *gin.Context) {
 	reqBody := ctx.GetString("reqBody")
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
-	// fmt.Println(reqBody)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 
 	req := gjson.Parse(reqBody).Array()[0]
 	if req.Get("name").String() != "" {
@@ -55,7 +55,7 @@ func SetProfile(ctx *gin.Context) {
 	}
 
 	signBody := session.Finalize(GetData("setProfile.json"), "user_model")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -63,14 +63,14 @@ func SetProfile(ctx *gin.Context) {
 
 func SetRecommendCard(ctx *gin.Context) {
 	reqBody := ctx.GetString("reqBody")
-	// fmt.Println(reqBody)
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	cardMasterId := int(gjson.Parse(reqBody).Array()[0].Get("card_master_id").Int())
 	session.UserStatus.RecommendCardMasterID = cardMasterId
 
 	signBody := session.Finalize(GetData("setRecommendCard.json"), "user_model")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -89,13 +89,14 @@ func SetLivePartner(ctx *gin.Context) {
 
 	// set the bit on the correct card
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	newCard := session.GetUserCard(req.CardMasterID)
 	newCard.LivePartnerCategories |= (1 << req.LivePartnerCategoryID)
 	session.UpdateUserCard(newCard)
 
 	// remove the bit on the other cards
-	partnerCards := serverdb.FetchPartnerCards(UserID)
+	partnerCards := userdata.FetchPartnerCards(UserID)
 	for _, card := range partnerCards {
 		if card.CardMasterID == req.CardMasterID {
 			continue
@@ -108,7 +109,7 @@ func SetLivePartner(ctx *gin.Context) {
 
 	session.Finalize("{}", "")
 	// this is correct, the server send {}
-	resp := SignResp(ctx.GetString("ep"), "{}", config.SessionKey)
+	resp := SignResp(ctx, "{}", config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -124,7 +125,8 @@ func SetScoreOrComboLive(ctx *gin.Context) {
 	utils.CheckErr(err)
 
 	userID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, userID)
+	session := userdata.GetSession(ctx, userID)
+	defer session.Close()
 	customSetProfile := session.GetUserCustomSetProfile()
 	if ctx.Request.URL.Path == "/userProfile/setScoreLive" {
 		customSetProfile.VoltageLiveDifficultyID = req.LiveDifficultyMasterID
@@ -132,7 +134,7 @@ func SetScoreOrComboLive(ctx *gin.Context) {
 		customSetProfile.ComboLiveDifficultyID = req.LiveDifficultyMasterID
 	}
 	session.SetUserCustomSetProfile(customSetProfile)
-	resp := SignResp(ctx.GetString("ep"), reqBody, config.SessionKey)
+	resp := SignResp(ctx, reqBody, config.SessionKey)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
 }

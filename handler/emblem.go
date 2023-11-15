@@ -2,7 +2,7 @@ package handler
 
 import (
 	"elichika/config"
-	"elichika/serverdb"
+	"elichika/userdata"
 
 	"net/http"
 
@@ -12,9 +12,10 @@ import (
 
 func FetchEmblem(ctx *gin.Context) {
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	signBody := session.Finalize(GetData("fetchEmblem.json"), "user_model")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
 }
@@ -22,7 +23,8 @@ func FetchEmblem(ctx *gin.Context) {
 func ActivateEmblem(ctx *gin.Context) {
 	reqBody := ctx.GetString("reqBody")
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	var emblemId int64
 	gjson.Parse(reqBody).ForEach(func(key, value gjson.Result) bool {
 		if value.Get("emblem_master_id").String() != "" {
@@ -35,7 +37,7 @@ func ActivateEmblem(ctx *gin.Context) {
 
 	signBody := session.Finalize(GetData("activateEmblem.json"), "user_model")
 
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)

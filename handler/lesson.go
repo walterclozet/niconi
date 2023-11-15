@@ -3,7 +3,7 @@ package handler
 import (
 	"elichika/config"
 	"elichika/model"
-	"elichika/serverdb"
+	"elichika/userdata"
 	"elichika/utils"
 	"fmt"
 	"net/http"
@@ -30,7 +30,8 @@ func ExecuteLesson(ctx *gin.Context) {
 	}
 
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	deckBytes, _ := json.Marshal(session.GetLessonDeck(req.SelectedDeckID))
 	deckInfo := string(deckBytes)
 	var actionList []model.LessonMenuAction
@@ -59,7 +60,7 @@ func ExecuteLesson(ctx *gin.Context) {
 	signBody, _ = sjson.Set(signBody, "lesson_menu_actions.5", actionList)
 	signBody, _ = sjson.Set(signBody, "lesson_menu_actions.7", actionList)
 
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
@@ -67,10 +68,11 @@ func ExecuteLesson(ctx *gin.Context) {
 
 func ResultLesson(ctx *gin.Context) {
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	signBody := session.Finalize(GetData("resultLesson.json"), "user_model_diff")
 	signBody, _ = sjson.Set(signBody, "selected_deck_id", session.UserStatus.MainLessonDeckID)
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 	// fmt.Println(resp)
 
 	ctx.Header("Content-Type", "application/json")
@@ -84,7 +86,8 @@ func SkillEditResult(ctx *gin.Context) {
 	req := gjson.Parse(reqBody).Array()[0]
 
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	skillList := req.Get("selected_skill_ids")
 	skillList.ForEach(func(key, cardId gjson.Result) bool {
 		if key.Int()%2 == 0 {
@@ -105,7 +108,7 @@ func SkillEditResult(ctx *gin.Context) {
 		return true
 	})
 	signBody := session.Finalize(GetData("skillEditResult.json"), "user_model")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 	// fmt.Println(resp)
 
 	ctx.Header("Content-Type", "application/json")
@@ -125,7 +128,8 @@ func SaveDeckLesson(ctx *gin.Context) {
 	}
 
 	UserID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, UserID)
+	session := userdata.GetSession(ctx, UserID)
+	defer session.Close()
 	userLessonDeck := session.GetLessonDeck(req.DeckID)
 	deckByte, _ := json.Marshal(userLessonDeck)
 	deckInfo := string(deckByte)
@@ -137,7 +141,7 @@ func SaveDeckLesson(ctx *gin.Context) {
 	}
 	session.UpdateLessonDeck(userLessonDeck)
 	signBody := session.Finalize(GetData("userModel.json"), "user_model")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 	// fmt.Println(resp)
 
 	ctx.Header("Content-Type", "application/json")
@@ -154,12 +158,13 @@ func ChangeDeckNameLessonDeck(ctx *gin.Context) {
 	err := json.Unmarshal([]byte(reqBody), &req)
 	utils.CheckErr(err)
 	userID := ctx.GetInt("user_id")
-	session := serverdb.GetSession(ctx, userID)
+	session := userdata.GetSession(ctx, userID)
+	defer session.Close()
 	lessonDeck := session.GetLessonDeck(req.DeckID)
 	lessonDeck.Name = req.DeckName
 	session.UpdateLessonDeck(lessonDeck)
 	signBody := session.Finalize(GetData("userModel.json"), "user_model")
-	resp := SignResp(ctx.GetString("ep"), signBody, config.SessionKey)
+	resp := SignResp(ctx, signBody, config.SessionKey)
 	ctx.Header("Content-Type", "application/json")
 	ctx.String(http.StatusOK, resp)
 }
